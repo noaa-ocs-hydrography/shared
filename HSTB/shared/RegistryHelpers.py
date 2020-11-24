@@ -115,6 +115,11 @@ if qt:
     def GetFilenameFromUserQT(parent, bSave=1, RegistryKey=None, DefaultVal=".", Title="Choose a path/filename", DefaultFile="", fFilter="All Files|*.*",
                               AppName="\\Pydro", bLocalMachine=0, bMulti=0, bReturnFileType=0):
         startpath = get_start_path(RegistryKey, DefaultVal, AppName, bLocalMachine)
+        if DefaultFile:
+            if startpath == '.':
+                startpath = os.path.join(r'C:\\', DefaultFile)
+            else:
+                startpath = os.path.join(startpath, DefaultFile)
         if bSave:
             filename, ffilter = QFileDialog.getSaveFileName(parent, Title, startpath, fFilter)
             rcode = bool(filename)
