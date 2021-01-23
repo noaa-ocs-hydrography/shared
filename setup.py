@@ -19,7 +19,7 @@ VERSION = '0.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-            'PySide2>=5.13.2'
+            'PySide2==5.13.2'  # import error with matplotlib 3.3.3 with pyside 5.15.2, sticking with 5.13.2 for now
             ]
 
 # What packages are optional?
