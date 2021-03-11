@@ -161,6 +161,6 @@ except KeyError:
 if use_wx:
     GetDirFromUser = GetDirFromUserWX
     GetFilenameFromUser = GetFilenameFromUserWX
-else:
+elif qt:
     GetDirFromUser = GetDirFromUserQT
     GetFilenameFromUser = GetFilenameFromUserQT

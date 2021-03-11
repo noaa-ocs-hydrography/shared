@@ -1,4 +1,3 @@
-from __future__ import with_statement, print_function
 from . import RegistryHelpers
 
 def UseDebug():
