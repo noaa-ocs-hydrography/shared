@@ -9,14 +9,8 @@ try:
 except:
     wx = None
 try:
-    try:
-        if os.environ['PYDRO_GUI_FORCE_PYQT'] == 'True':
-            from PyQt5.QtWidgets import QFileDialog
-        else:
-            from PySide2.QtWidgets import QFileDialog
-    except:
-        from PySide2.QtWidgets import QFileDialog
-    qt = True
+    import PySide2 as qt
+    from PySide2.QtWidgets import QFileDialog
 except:
     qt = None
 
