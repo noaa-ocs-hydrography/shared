@@ -28,6 +28,10 @@ def path_to_root_env(*paths):
     return os.path.normpath(os.path.join(path_to_NOAA(), "..", *paths))
 
 
+def path_to_supplementals(*paths):
+    return os.path.normpath(os.path.join(path_to_root_env(), 'supplementals', *paths))
+
+
 def path_to_conda(*paths):
     return os.path.normpath(os.path.join(path_to_root_env(), "scripts", *paths))
 
