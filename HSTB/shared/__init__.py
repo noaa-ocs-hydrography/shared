@@ -16,7 +16,6 @@ except ImportError:
 def path_to_HSTB(*paths):
     # for f in inspect.stack():
     #     print('-', inspect.getframeinfo(f[0]))
-    print("Warning -- path_to_HSTB is not reliable in 3.8 with the move to git repo and namespaces")
     return os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(__file__)), *paths))
 
 
