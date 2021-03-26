@@ -1,5 +1,31 @@
 import numpy as np
 
+
+def affine(r, c, x0, dxx, dyx, y0, dxy, dyy):
+    """
+    Returns the affine transform -- normally row, column to x,y position.
+    If this is the geotransform from a gdal geotiff (for example) the coordinates are the displayed pixel corners - not the center.
+    If you want the center of the pixel then use affine_center
+    """
+    x = x0 + c * dxx + r * dyx
+    y = y0 + c * dxy + r * dyy
+    return x, y
+
+
+def affine_center(r, c, x0, dxx, dyx, y0, dxy, dyy):
+    return affine(r + 0.5, c + 0.5, x0, dxx, dyx, y0, dxy, dyy)
+
+
+def inv_affine(x, y, x0, dxx, dyx, y0, dxy, dyy):
+    if dyx == 0 and dxy == 0:
+        c = np.array(np.floor((x - x0) / dxx), dtype=np.int32)
+        r = np.array(np.floor((y - y0) / dyy), dtype=np.int32)
+    else:
+        # @todo support skew projection
+        raise ValueError("non-North up affine transforms are not supported yet")
+    return r, c
+
+
 class Grid(object):
     ''' Class to compute array indices from position and vice versa.
     In HSTB module, currently used with an ESRI grids (ArcExt) and VR BAGs (SurveyOutline)
@@ -39,7 +65,9 @@ class Grid(object):
         self.maxx = self.minx + nxy[0] * self.cell_size_x + buffer_dist
         self.miny = lower_left_xy[1] - buffer_dist  # Desired grid cell size = 500 m ## BUFFER
         self.maxy = self.miny + nxy[1] * self.cell_size_y + buffer_dist
-
+    @property
+    def geotransform(self):
+        return (self.minx, self.cell_size_x, 0, self.miny, 0, self.cell_size_y)
     @property
     def cell_size_x(self):
         """ Cell size in X direction.
