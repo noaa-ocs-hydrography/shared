@@ -173,7 +173,7 @@ def NavTolerance():
 
 
 def PydroVersion():
-    return '21.3'
+    return '22.1'
 
 
 def PydroTitleVersion():
