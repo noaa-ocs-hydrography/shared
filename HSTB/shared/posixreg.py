@@ -13,9 +13,10 @@ object serialization)
 You _must_ call posixreg.__init__() after import to inialize the global registry
 '''
 
-import os, sys
+import os, sys, pathlib
 from sys import stderr
 from pickle import Pickler, Unpickler, PicklingError, UnpicklingError
+import traceback
 
 # Default path for registry is in the user's home directory
 default_file = os.environ['HOME'] + os.sep + '.pydro.reg'
@@ -25,35 +26,32 @@ reg = None
 
 
 class posixreg:
-    def __init__(self, file=default_file):
+    def __init__(self, filepath=default_file):
 
-        dir = os.sep.join(file.split(os.sep)[0:-2]) # Chop of the filename to get the directory
+        dirpath = pathlib.Path(filepath).parent
 
-        if os.path.exists(file):
-            self.file = file
+        if os.path.exists(filepath):
+            self.file = filepath
             self.read_from_disk()
-            sys.stderr.write("Registry file already exists, so I've read in the initial registry")
-            sys.stderr.write(self.reg)
-        elif os.path.exists(dir):
-            self.file = file
+        elif dirpath.exists():
+            self.file = filepath
             self.reg = {}
-        else:
-            sys.stderr.write("Warning: posixreg.__init__() received bad filename: {}".format(file))
-            return None
 
     def write_to_disk(self):
         try:
-            p = Pickler(open(self.file, 'w'))
+            p = Pickler(open(self.file, 'wb'))
             p.dump(self.reg)
         except PicklingError:
-            sys.stderr.write("ERROR: could not save the registry to path {}".format(path))
+            sys.stderr.write("ERROR: could not save the registry to path {}".format(self.file))
 
     def read_from_disk(self):
         try:
-            p = Unpickler(open(self.file, 'r'))
+            p = Unpickler(open(self.file, 'rb'))
             self.reg = p.load()
-        except UnpicklingError:
-            sys.stderr.write("ERROR: could not load the registry from path {}".format(path))
+        except (UnpicklingError, EOFError, FileNotFoundError):
+            traceback.print_exc()
+            self.reg = {}
+            sys.stderr.write("ERROR: could not load the registry from path {}".format(self.file))
 
     def get_value(self, key_path):
         '''recurses through the registry tree selecting the branch which
@@ -69,8 +67,7 @@ class posixreg:
             try:
                 current_reg = current_reg[k]
             except KeyError:
-                if not k:
-                    raise KeyError("path %s does not exist at component %s" % (key_path, k))
+                raise KeyError("path %s does not exist at component %s" % (key_path, k))
         return current_reg
 
     def put_value(self, key_path, value):
@@ -91,59 +88,68 @@ class posixreg:
         current_reg[path[-1]] = value
         self.write_to_disk()
 
+
 # Create a global registry that applications can use
 def init():
-  global reg
-  reg = posixreg()
+    global reg
+    reg = posixreg()
+
 
 def SavePathToRegistry(pathkey, val, appname="\\Pydro", bLocalMachine=0, keybasepath="SOFTWARE\\Tranya"):
     global reg
     if bLocalMachine:
-        rootkey='HKEY_LOCAL_MACHINE'
+        rootkey = 'HKEY_LOCAL_MACHINE'
     else:
-        rootkey='HKEY_CURRENT_USER'
+        rootkey = 'HKEY_CURRENT_USER'
 
     reg.put_value('\\'.join([rootkey, keybasepath, appname, pathkey]), val)
+
 
 def GetPathFromRegistry(pathkey, defaultval, appname="\\Pydro", bLocalMachine=0, keybasepath="SOFTWARE\\Tranya"):
     global reg
     if bLocalMachine:
-        rootkey='HKEY_LOCAL_MACHINE'
+        rootkey = 'HKEY_LOCAL_MACHINE'
     else:
-        rootkey='HKEY_CURRENT_USER'
+        rootkey = 'HKEY_CURRENT_USER'
 
     try:
-      val = reg.get_value('\\'.join([rootkey, keybasepath, appname, pathkey]))
-      if not val: raise Exception()
+        val = reg.get_value('\\'.join([rootkey, keybasepath, appname, pathkey]))
+        if not val: raise Exception()
     except:
-      val = defaultval
-
+        val = defaultval
     return val
+
 
 def SaveDWORDToRegistry(name, DWordName, val, bLocalMachine=0, keypathbase="SOFTWARE\\Tranya\\", appname=''):
     if bLocalMachine:
-        rootkey='HKEY_LOCAL_MACHINE'
+        rootkey = 'HKEY_LOCAL_MACHINE'
     else:
-        rootkey='HKEY_CURRENT_USER'
+        rootkey = 'HKEY_CURRENT_USER'
 
     reg.put_value('\\'.join([rootkey, keypathbase, appname, name, DWordName]), val)
 
-def GetDWORDFromRegistry(name, DWordName, default=-999, bSilent=0, bLocalMachine=0, keypathbase="SOFTWARE\\Tranya\\", appname=''):
+
+def GetDWORDFromRegistry(name, DWordName, default=-999, bSilent=0, bLocalMachine=0, keypathbase="SOFTWARE\\Tranya\\",
+                         appname=''):
     if bLocalMachine:
-        rootkey='HKEY_LOCAL_MACHINE'
+        rootkey = 'HKEY_LOCAL_MACHINE'
     else:
-        rootkey='HKEY_CURRENT_USER'
+        rootkey = 'HKEY_CURRENT_USER'
     return reg.get_value('\\'.join([rootkey, keypathbase, appname, name, DWordName]))
+
 
 def AddMITool(ToolPath, ToolName, Description="", Autoload=1, removeTool=""):
     raise NotImplementedError("AddMITool not yet available for non-windows platforms")
 
 
-
 # Run this file explicity to run this test
 if __name__ == '__main__':
+    deffile_test = default_file + '_test'
+    if pathlib.Path(deffile_test).exists():
+        os.remove(deffile_test)
+
     print('Testing posixreg.py')
-    print('Default file is: {}'.format(default_file))
+    print('Default file is: {}'.format(deffile_test))
 
     print('\nInitializing a posixreg object with a bad path')
     r = posixreg('/this/path/does/not/exist')
@@ -152,7 +158,7 @@ if __name__ == '__main__':
     r = posixreg('/home/jamesmh/blah.stuff')
 
     print('\nTrying to initialize a valid posixreg object with the default path')
-    r = posixreg()
+    r = posixreg(deffile_test)
 
     print('\nWriting an empty registry to disk')
     r.write_to_disk()
@@ -164,7 +170,7 @@ if __name__ == '__main__':
 
     print('\nAdding some arbitrary values')
     paths = ['blah\\stuff\\foo\\bar', 'blah\\\\stuff\\\\james\\hiebert', 'a\\completely\\different\\tree']
-    vals  = [1, 2, 3]
+    vals = [1, 2, 3]
 
     for i in range(3):
         print('  Adding: {}={}'.format(paths[i], vals[i]))
