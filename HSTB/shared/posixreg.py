@@ -19,7 +19,8 @@ from pickle import Pickler, Unpickler, PicklingError, UnpicklingError
 
 # Default path for registry is in the user's home directory
 default_file = os.environ['HOME'] + os.sep + '.pydro.reg'
-
+__all__ = ['posixreg', 'SavePathToRegistry', 'GetPathFromRegistry', 'SaveDWORDToRegistry', 'GetDWORDFromRegistry',
+           'AddMITool']
 class posixreg:
     def __init__(self, file=default_file):
 
