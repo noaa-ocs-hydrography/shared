@@ -4,5 +4,4 @@ if 'win' in platform:
 
 elif 'linux' in platform:
   from .posixreg import *
-  # import posixreg
-  posixreg.__init__()
+  init()

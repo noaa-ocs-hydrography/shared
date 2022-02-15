@@ -20,7 +20,10 @@ from pickle import Pickler, Unpickler, PicklingError, UnpicklingError
 # Default path for registry is in the user's home directory
 default_file = os.environ['HOME'] + os.sep + '.pydro.reg'
 __all__ = ['posixreg', 'SavePathToRegistry', 'GetPathFromRegistry', 'SaveDWORDToRegistry', 'GetDWORDFromRegistry',
-           'AddMITool']
+           'AddMITool', 'init']
+reg = None
+
+
 class posixreg:
     def __init__(self, file=default_file):
 
@@ -89,8 +92,7 @@ class posixreg:
         self.write_to_disk()
 
 # Create a global registry that applications can use
-reg = None
-def __init__():
+def init():
   global reg
   reg = posixreg()
 
