@@ -134,23 +134,34 @@ def GetFilenameFromUserQT(parent, bSave=1, RegistryKey=None, DefaultVal=".", Tit
         ret.append(ffilter)
     return ret
 
+def uninitialized(*args, **kwargs):
+    raise RuntimeError("GUI library not initialized")
 
-use_wx = False
-if "wx" in sys.modules.keys():
-    import wx
-    use_wx = True
-elif "PySide6" in sys.modules.keys():
-    from PySide6.QtWidgets import QFileDialog
-elif "PySide2" in sys.modules.keys():
-    from PySide2.QtWidgets import QFileDialog
-elif "PyQt5" in sys.modules.keys():
-    from PyQt5.QtWidgets import QFileDialog
-else:
-    raise ImportError("No GUI library found, import PySide6, PySide2, PyQt5 or wx before RegistryHelpers")
+GetDirFromUser = uninitialized
+GetFilenameFromUser = uninitialized
 
-if use_wx:
+def use_wx():
+    global GetDirFromUser, GetFilenameFromUser
     GetDirFromUser = GetDirFromUserWX
     GetFilenameFromUser = GetFilenameFromUserWX
-else:
+
+def use_qt():
+    global GetDirFromUser, GetFilenameFromUser
     GetDirFromUser = GetDirFromUserQT
     GetFilenameFromUser = GetFilenameFromUserQT
+
+if "wx" in sys.modules.keys():
+    import wx
+    use_wx()
+elif "PySide6" in sys.modules.keys():
+    from PySide6.QtWidgets import QFileDialog
+    use_qt()
+elif "PySide2" in sys.modules.keys():
+    from PySide2.QtWidgets import QFileDialog
+    use_qt()
+elif "PyQt5" in sys.modules.keys():
+    from PyQt5.QtWidgets import QFileDialog
+    use_qt()
+else:
+    print("No GUI library found, import PySide6, PySide2, PyQt5 or wx before RegistryHelpers", file=sys.stderr)
+
