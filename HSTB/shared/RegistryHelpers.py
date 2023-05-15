@@ -136,15 +136,15 @@ def GetFilenameFromUserQT(parent, bSave=1, RegistryKey=None, DefaultVal=".", Tit
 
 
 use_wx = False
-if "PySide6" in sys.modules.keys():
+if "wx" in sys.modules.keys():
+    import wx
+    use_wx = True
+elif "PySide6" in sys.modules.keys():
     from PySide6.QtWidgets import QFileDialog
 elif "PySide2" in sys.modules.keys():
     from PySide2.QtWidgets import QFileDialog
 elif "PyQt5" in sys.modules.keys():
     from PyQt5.QtWidgets import QFileDialog
-elif "wx" in sys.modules.keys():
-    import wx
-    use_wx = True
 else:
     raise ImportError("No GUI library found, import PySide6, PySide2, PyQt5 or wx before RegistryHelpers")
 
